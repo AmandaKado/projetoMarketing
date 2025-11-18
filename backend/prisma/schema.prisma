@@ -1,0 +1,83 @@
+// prisma/schema.prisma
+datasource db {
+  provider = "mysql"
+  // Substitua 'SUA_SENHA' pela senha do MySQL. Se não tiver senha, deixe vazio: ...:root:@localhost...
+  url      = "mysql://root:SUA_SENHA@localhost:3306/active_clone_db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// 1. Tabela de Contatos
+model Contact {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  firstName String?
+  lastName  String?
+  phone     String?
+  score     Int      @default(0) // Pontuação
+  status    String   @default("ACTIVE") // ACTIVE, UNSUBSCRIBED, BOUNCED
+  createdAt DateTime @default(now())
+
+  // Relacionamentos
+  lists        ContactList[]
+  tags         ContactTag[]
+  customFields ContactCustomField[]
+  activities   ActivityLog[]
+}
+
+// 2. Tabela de Listas
+model List {
+  id          Int           @id @default(autoincrement())
+  name        String
+  description String?
+  contacts    ContactList[]
+}
+
+// Tabela Pivo (NxN) entre Contato e Lista
+model ContactList {
+  contactId Int
+  listId    Int
+  contact   Contact  @relation(fields: [contactId], references: [id])
+  list      List     @relation(fields: [listId], references: [id])
+  joinedAt  DateTime @default(now())
+
+  @@id([contactId, listId])
+}
+
+// 3. Tabela de Tags
+model Tag {
+  id       Int          @id @default(autoincrement())
+  name     String       @unique
+  contacts ContactTag[]
+}
+
+// Tabela Pivo (NxN) entre Contato e Tag
+model ContactTag {
+  contactId Int
+  tagId     Int
+  contact   Contact @relation(fields: [contactId], references: [id])
+  tag       Tag     @relation(fields: [tagId], references: [id])
+
+  @@id([contactId, tagId])
+}
+
+// 4. Campos Personalizados (Ex: "Empresa", "Data de Aniversário")
+model ContactCustomField {
+  id        Int     @id @default(autoincrement())
+  key       String // O nome do campo (ex: "company_name")
+  value     String // O valor (ex: "Coca-Cola")
+  contactId Int
+  contact   Contact @relation(fields: [contactId], references: [id])
+}
+
+// 5. Histórico de Atividades (Timeline)
+model ActivityLog {
+  id          Int      @id @default(autoincrement())
+  action      String // "EMAIL_OPENED", "LINK_CLICKED", "TAG_ADDED"
+  description String? // "Abriu o email de Boas Vindas"
+  createdAt   DateTime @default(now())
+  contactId   Int
+  contact     Contact  @relation(fields: [contactId], references: [id])
+}
