@@ -2,7 +2,7 @@
 datasource db {
   provider = "mysql"
   // Substitua 'SUA_SENHA' pela senha do MySQL. Se não tiver senha, deixe vazio: ...:root:@localhost...
-  url      = "mysql://root:SUA_SENHA@localhost:3306/active_clone_db"
+  url      = "mysql://root:MySql_0710@localhost:3306/marketing_db"
 }
 
 generator client {
